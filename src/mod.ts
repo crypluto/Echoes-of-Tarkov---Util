@@ -63,7 +63,8 @@ class EchoesOfTarkov implements IPreSptLoadMod, IPostDBLoadMod {
         const imagePath = path.resolve(__dirname, "..", "res", selectedImage);
         if (fs.existsSync(imagePath)) {
             imageRouter.addRoute("/files/launcher/bg", imagePath);
-            if (this.config.debugLogging) console.log(`[Echoes of Tarkov] Launcher background overridden with ${selectedImage}`);
+            if (this.config.debugLogging) 
+                console.log(`[Echoes of Tarkov] Launcher background overridden with ${selectedImage}`);
         } else if (this.config.debugLogging) {
             console.warn(`[Echoes of Tarkov] Background image not found: ${imagePath}`);
         }
