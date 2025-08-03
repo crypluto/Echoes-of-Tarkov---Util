@@ -1,193 +1,247 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import path from "path";
 import * as fs from "fs";
+import * as path from "path";
 import { DependencyContainer } from "tsyringe";
-import { IDatabaseTables } from "@spt-aki/models/spt/server/IDatabaseTables";
-import { ILogger } from "@spt-aki/models/spt/utils/ILogger";
-import { ImageRouter } from "@spt-aki/routers/ImageRouter";
 import { IPostDBLoadMod } from "@spt-aki/models/external/IPostDBLoadMod";
-import { IPreSptLoadMod } from "@spt-aki/models/external/IPreSptLoadMod";
-import JSON5 from "json5";
-import { PlutoLogColors } from "./PlutoLogging";
+import { IpreSptLoadMod } from "@spt/models/external/IpreSptLoadMod";
+import { ImageRouter } from "@spt-aki/routers/ImageRouter";
+import { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
 
-
-
-interface ModConfig {
-    debugLogging: boolean;
-    bgImageOverrideEnabled: boolean;
-    fleaMarketPatchEnabled: boolean;
-    singleFireRatePatchEnabled: boolean;
-    singleFireRateNewValue: number;
+interface WeatherPreset {
+    name: string;
+    weight: number;
+    apply: (seasonConfig: any) => void;
 }
 
-class EchoesOfTarkov implements IPreSptLoadMod, IPostDBLoadMod {
-    private configPath = path.resolve(__dirname, "..", "config", "config.json5");
+interface ModConfig {
+    weatherPatchEnabled: boolean;
+    debugLogging: boolean;
+}
+
+class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
+    private configPath = path.resolve(__dirname, "..", "config", "config.json");
     private config: ModConfig = {
-        debugLogging: false,
-        bgImageOverrideEnabled: true,
-        fleaMarketPatchEnabled: true,
-        singleFireRatePatchEnabled: true,
-        singleFireRateNewValue: 450,
+        weatherPatchEnabled: true,
+        debugLogging: false
     };
 
-    public preSptLoad(container: DependencyContainer): void {
-        if (!this.config.bgImageOverrideEnabled) {
-            if (this.config.debugLogging) console.log("[Echoes of Tarkov] BG Image override disabled via config.");
-            return;
-        }
-        if (this.config.debugLogging) {
-            console.log(`${PlutoLogColors.FgCyan}[Echoes of Tarkov]${PlutoLogColors.Reset} Debug message here.`);
-        }
+    private printRainbowLog(): void {
+        console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Loaded              | \x1b[91mA\x1b[0m\x1b[93m \x1b[0m\x1b[92mM\x1b[0m\x1b[96mo\x1b[0m\x1b[94md\x1b[0m\x1b[95m \x1b[0m\x1b[91mb\x1b[0m\x1b[93my\x1b[0m\x1b[92m \x1b[0m\x1b[96mR\x1b[0m\x1b[94mh\x1b[0m\x1b[95me\x1b[0m\x1b[91md\x1b[0m\x1b[93md\x1b[0m\x1b[92mE\x1b[0m\x1b[96ml\x1b[0m\x1b[94mB\x1b[0m\x1b[95mo\x1b[0m\x1b[91mz\x1b[0m\x1b[93mo\x1b[0m\x1b[92m,\x1b[0m \x1b[96mE\x1b[0m\x1b[94mu\x1b[0m\x1b[95mk\x1b[0m\x1b[91my\x1b[0m\x1b[93mr\x1b[0m\x1b[92me\x1b[0m\x1b[96m,\x1b[0m \x1b[94ma\x1b[0m\x1b[95mn\x1b[0m\x1b[91md\x1b[0m \x1b[93mP\x1b[0m\x1b[92mi\x1b[0m\x1b[96mg\x1b[0m\x1b[94me\x1b[0m\x1b[95mo\x1b[0m\x1b[91mn\x1b[0m`);
+    }
+
+    public postDBLoad(container: DependencyContainer): void {
+        this.printRainbowLog();
+
         const imageRouter = container.resolve<ImageRouter>("ImageRouter");
-        const possibleImages = [
-            "bg.png", "bg_1.png", "bg_2.png", "bg_3.png", "bg_4.png",
-            "bg_5.png", "bg_6.png", "bg_7.png", "bg_8.png", "bg_9.png"
+        const logger = container.resolve<ILogger>("WinstonLogger");
+
+        this.loadConfig(logger);
+
+        const debugLog = (msg: string) => {
+            if (this.config.debugLogging) {
+                logger.debug(`[Echoes of Tarkov] ${msg}`);
+            }
+        };
+
+        const options = [
+            { filename: "bg.png", weight: 19 },
+            { filename: "bg_1.png", weight: 10 },
+            { filename: "bg_2.png", weight: 10 },
+            { filename: "bg_3.png", weight: 10 },
+            { filename: "bg_4.png", weight: 1 },
+            { filename: "bg_5.png", weight: 10 },
+            { filename: "bg_6.png", weight: 10 },
+            { filename: "bg_7.png", weight: 10 },
+            { filename: "bg_8.png", weight: 10 },
+            { filename: "bg_9.png", weight: 10 }
         ];
 
-        const weights = [60, 10, 5, 5, 5, 5, 2, 2, 1, 1];
-        const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-        const random = Math.random() * totalWeight;
+        const totalWeight = options.reduce((sum, option) => sum + option.weight, 0);
+        const rand = Math.random() * totalWeight;
+        let cumulative = 0;
+        let selectedFile = "";
 
-        let cumulativeWeight = 0;
-        let selectedImage = "bg.png";
-
-        for (let i = 0; i < possibleImages.length; i++) {
-            cumulativeWeight += weights[i];
-            if (random < cumulativeWeight) {
-                selectedImage = possibleImages[i];
+        for (const option of options) {
+            cumulative += option.weight;
+            if (rand < cumulative) {
+                selectedFile = option.filename;
                 break;
             }
         }
 
-        const imagePath = path.resolve(__dirname, "..", "res", selectedImage);
-        if (fs.existsSync(imagePath)) {
-            imageRouter.addRoute("/files/launcher/bg", imagePath);
-            if (this.config.debugLogging) 
-                console.log(`[Echoes of Tarkov] Launcher background overridden with ${selectedImage}`);
-        } else if (this.config.debugLogging) {
-            console.warn(`[Echoes of Tarkov] Background image not found: ${imagePath}`);
-        }
-    }
+        const selectedPath = path.resolve(__dirname, "..", "res", selectedFile);
 
-    public postDBLoad(container: DependencyContainer): void {
-        const logger = container.resolve<ILogger>("WinstonLogger");
-        const tables = container.resolve<IDatabaseTables>("DatabaseServer").getTables();
-
-        this.loadConfig(logger);
-
-        this.replaceBackgroundColor(tables, logger);
-
-        if (this.config.fleaMarketPatchEnabled) {
-            this.patchFleaMarketLevel(tables, logger);
-        } else if (this.config.debugLogging) {
-            console.log("[Echoes of Tarkov] Flea market patch disabled via config.");
+        if (fs.existsSync(selectedPath)) {
+            console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Overriding launcher background with ${selectedFile}`);
+            imageRouter.addRoute("/files/launcher/bg", selectedPath);
+        } else {
+            logger.warning(`Selected background not found: ${selectedPath}`);
         }
 
-        if (this.config.singleFireRatePatchEnabled) {
-            this.patchSingleFireRateInItems(tables, logger);
-        } else if (this.config.debugLogging) {
-            console.log("[Echoes of Tarkov] SingleFireRate patch disabled via config.");
-        }
+        const db = container.resolve<DatabaseServer>("DatabaseServer");
+        const tables = db.getTables();
 
-        this.injectCustomNames(tables, logger);
+        // NEW: patch BackgroundColor in DB memory
+        this.patchBackgroundColorsInDB(tables);
 
-        this.printRainbowLog();
-    }
-
-    public postSptLoad(container: DependencyContainer): void {
-        const logger = container.resolve<ILogger>("WinstonLogger");
-        const tables = container.resolve<IDatabaseTables>("DatabaseServer").getTables();
-
-        this.replaceBackgroundColor(tables, logger);
-    }
-
-    private loadConfig(logger: ILogger): void {
-        try {
-            if (fs.existsSync(this.configPath)) {
-                const rawData = fs.readFileSync(this.configPath, "utf-8");
-                const parsedConfig = JSON5.parse(rawData);
-                this.config = { ...this.config, ...parsedConfig };
-
-                if (this.config.debugLogging) {
-                    console.log("[Echoes of Tarkov] Loaded config.json5 successfully.");
+        const botTypes = tables.bots.types;
+        const customNames = ["Pluto!", "Pigeon", "Pijinski", "eukyre"];
+        const factions = ["usec", "bear"];
+        for (const faction of factions) {
+            const botType = botTypes[faction];
+            if (botType?.firstName) {
+                for (const name of customNames) {
+                    if (!botType.firstName.includes(name)) {
+                        botType.firstName.push(name);
+                    }
                 }
+                debugLog(`Added custom ${faction.toUpperCase()} names: ${customNames.join(", ")}`);
             } else {
-                logger.warning("[Echoes of Tarkov] config.json5 not found, using default settings.");
-            }
-        } catch (error) {
-            logger.warning(`[Echoes of Tarkov] Failed to load config.json5: ${error}`);
-        }
-    }
-
-    private replaceBackgroundColor(obj: any, logger: ILogger, depth = 0, logged = { done: false }): void {
-        if (depth > 20 || typeof obj !== "object" || obj === null) return;
-
-        for (const key in obj) {
-            if (key === "BackgroundColor" && typeof obj[key] === "string") {
-                obj[key] = "black";
-                if (this.config.debugLogging && !logged.done) {
-                    console.log("[Echoes of Tarkov] Patched BackgroundColor to black");
-                    logged.done = true;
-                }
-            } else if (typeof obj[key] === "object") {
-                this.replaceBackgroundColor(obj[key], logger, depth + 1, logged);
+                logger.warning(`Could not find ${faction} firstName array.`);
             }
         }
-    }
 
-
-    private injectCustomNames(tables: IDatabaseTables, logger: ILogger): void {
-        const names = ["Pluto!", "Pigeon", "Pijinski", "eukyre"];
-        for (const name of names) {
-            if (!tables.bots.types.usec.firstName.includes(name)) {
-                tables.bots.types.usec.firstName.push(name);
-                if (this.config.debugLogging) {
-                    console.log(`[Echoes of Tarkov] Added custom USEC name: ${name}`);
-                }
-            }
-            if (!tables.bots.types.bear.firstName.includes(name)) {
-                tables.bots.types.bear.firstName.push(name);
-                if (this.config.debugLogging) {
-                    console.log(`[Echoes of Tarkov] Added custom BEAR name: ${name}`);
-                }
-            }
+        if (tables.globals?.config?.RagFair) {
+            const oldLevel = tables.globals.config.RagFair.minUserLevel;
+            tables.globals.config.RagFair.minUserLevel = 30;
+            debugLog(`Raised Ragfair min level from ${oldLevel} to 30`);
+        } else {
+            logger.warning("Could not locate config.RagFair.minUserLevel in globals.");
         }
-    }
 
-    private patchFleaMarketLevel(tables: IDatabaseTables, logger: ILogger): void {
-        const oldLevel = tables.globals.config.RagFair.minUserLevel;
-        tables.globals.config.RagFair.minUserLevel = 30;
-        if (this.config.debugLogging) {
-            console.log(`[Echoes of Tarkov] Raised RagFair minUserLevel from ${oldLevel} to 30`);
-        }
-    }
-
-    private patchSingleFireRateInItems(tables: IDatabaseTables, logger: ILogger): void {
-        const itemId = "6259b864ebedf17603599e88";
-        const item = tables.templates?.items?.[itemId];
-
-        if (!item) {
-            logger.warning(`[Echoes of Tarkov] Item ${itemId} not found in items.json`);
+        if (!this.config.weatherPatchEnabled) {
+            debugLog("Weather patch disabled via config.");
             return;
         }
 
-        const currentRate = item._props?.SingleFireRate;
-        if (typeof currentRate === "number" && currentRate !== this.config.singleFireRateNewValue) {
-            item._props.SingleFireRate = this.config.singleFireRateNewValue;
-            if (this.config.debugLogging) {
-                console.log(`[Echoes of Tarkov] Patched SingleFireRate for ${itemId}: ${currentRate} → ${this.config.singleFireRateNewValue}`);
+        const weatherPath = this.findWeatherJson(__dirname);
+        if (!weatherPath) {
+            logger.error("Could not find weather.json in any parent directory.");
+            return;
+        }
+
+        const weatherData = JSON.parse(fs.readFileSync(weatherPath, "utf-8"));
+
+        const presets: WeatherPreset[] = [
+            {
+                name: "Hurricane",
+                weight: 50,
+                apply: (seasonConfig) => {
+                    seasonConfig.clouds.weights = seasonConfig.clouds.values.map((_, i, arr) => i === arr.length - 1 ? 1 : 0);
+                    seasonConfig.rain.weights = seasonConfig.rain.values.map((_, i, arr) => i === arr.length - 1 ? 1 : 0);
+                    seasonConfig.fog.weights = seasonConfig.fog.values.map((_, i, arr) => i === arr.length - 1 ? 1 : 0);
+                    seasonConfig.windSpeed.values = [0, 1, 2, 3, 4, 5, 6];
+                    seasonConfig.windSpeed.weights = [0, 0, 0, 0, 0, 0, 1];
+                }
+            },
+            {
+                name: "ClearSkies",
+                weight: 20,
+                apply: (seasonConfig) => {
+                    seasonConfig.clouds.weights = seasonConfig.clouds.values.map((_, i) => i === 0 ? 1 : 0);
+                    seasonConfig.rain.weights = seasonConfig.rain.values.map(() => 0);
+                    seasonConfig.fog.weights = seasonConfig.fog.values.map(() => 0);
+                    seasonConfig.windSpeed.values = [0, 1, 2, 3, 4];
+                    seasonConfig.windSpeed.weights = [1, 0, 0, 0, 0];
+                }
+            },
+            {
+                name: "LightRain",
+                weight: 15,
+                apply: (seasonConfig) => {
+                    seasonConfig.clouds.weights = seasonConfig.clouds.values.map((_, i) => i === seasonConfig.clouds.values.length - 2 ? 1 : 0);
+                    seasonConfig.rain.weights = seasonConfig.rain.values.map((_, i) => i === 0 ? 1 : 0);
+                    seasonConfig.fog.weights = seasonConfig.fog.values.map((_, i) => i === 1 ? 1 : 0);
+                    seasonConfig.windSpeed.values = [0, 1, 2, 3, 4];
+                    seasonConfig.windSpeed.weights = [0, 1, 0, 0, 0];
+                }
+            },
+            {
+                name: "HeavyWind",
+                weight: 15,
+                apply: (seasonConfig) => {
+                    seasonConfig.clouds.weights = seasonConfig.clouds.values.map((_, i) => i === seasonConfig.clouds.values.length - 2 ? 1 : 0);
+                    seasonConfig.rain.weights = seasonConfig.rain.values.map(() => 0);
+                    seasonConfig.fog.weights = seasonConfig.fog.values.map((_, i) => i === 2 ? 1 : 0);
+                    seasonConfig.windSpeed.values = [0, 1, 2, 3, 4, 5, 6];
+                    seasonConfig.windSpeed.weights = [0, 0, 0, 0, 0, 1, 0];
+                }
             }
-        } else if (this.config.debugLogging) {
-            console.log(`[Echoes of Tarkov] SingleFireRate for ${itemId} is already ${currentRate}, no patch applied.`);
+        ];
+
+        const totalPresetWeight = presets.reduce((sum, p) => sum + p.weight, 0);
+        let presetRand = Math.random() * totalPresetWeight;
+        let selectedPreset: WeatherPreset | null = null;
+
+        for (const p of presets) {
+            if (presetRand < p.weight) {
+                selectedPreset = p;
+                break;
+            }
+            presetRand -= p.weight;
+        }
+
+        if (!selectedPreset) {
+            selectedPreset = presets[0];
+        }
+
+        console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Applying weather preset: ${selectedPreset.name}`);
+
+        for (const season in weatherData.weather.seasonValues) {
+            selectedPreset.apply(weatherData.weather.seasonValues[season]);
+        }
+
+        fs.writeFileSync(weatherPath, JSON.stringify(weatherData, null, 4));
+        debugLog("Weather config patched.");
+    }
+
+    private patchBackgroundColorsInDB(obj: any, depth = 0): void {
+        if (depth > 20 || typeof obj !== "object" || obj === null) return;
+
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+
+            if (key === "BackgroundColor" && typeof value === "string") {
+                obj[key] = "black";
+                if (this.config.debugLogging) {}
+            } else if (typeof value === "object") {
+                this.patchBackgroundColorsInDB(value, depth + 1);
+            }
         }
     }
 
-    private printRainbowLog(): void {
-        console.log(
-            "\x1b[94m[Echoes of Tarkov] \x1b[93m Loaded              | \x1b[91mM\x1b[0m\x1b[93ma\x1b[0m\x1b[92md\x1b[0m\x1b[96me\x1b[0m\x1b[94m \x1b[0m\x1b[95mb\x1b[0m\x1b[91my\x1b[0m\x1b[93m \x1b[0m\x1b[92mP\x1b[0m\x1b[96ml\x1b[0m\x1b[94mu\x1b[0m\x1b[95mt\x1b[0m\x1b[91mo\x1b[0m\x1b[93m!\x1b[0m"
-        );
+    private findWeatherJson(startDir: string): string | null {
+        let dir = startDir;
+        for (let i = 0; i < 10; i++) {
+            const testPath = path.join(dir, "SPT_Data", "Server", "configs", "weather.json");
+            if (fs.existsSync(testPath)) {
+                return testPath;
+            }
+            const parent = path.dirname(dir);
+            if (parent === dir) break;
+            dir = parent;
+        }
+        return null;
+    }
+
+    private loadConfig(logger: ILogger): void {
+        if (fs.existsSync(this.configPath)) {
+            try {
+                const raw = fs.readFileSync(this.configPath, "utf-8");
+                const parsed = JSON.parse(raw);
+                this.config.weatherPatchEnabled = parsed.weatherPatchEnabled ?? true;
+                this.config.debugLogging = parsed.debugLogging ?? false;
+                if (this.config.debugLogging) {
+                    logger.debug("[Echoes of Tarkov] Config loaded: weatherPatchEnabled=" + this.config.weatherPatchEnabled + ", debugLogging=" + this.config.debugLogging);
+                }
+            } catch (e) {
+                logger.error("[Echoes of Tarkov] Failed to parse config.json, using defaults.");
+            }
+        } else {
+            logger.warning("[Echoes of Tarkov] Config file not found at " + this.configPath + ", using defaults.");
+        }
     }
 }
 
-module.exports = { mod: new EchoesOfTarkov() };
+module.exports = { mod: new BGReplace() };
