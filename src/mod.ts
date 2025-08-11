@@ -104,7 +104,30 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
             "Ronin117",
             "Screwball0",
             "tallanx",
-            "LaptopSPT"
+            "LaptopSPT",
+            "Nonbinary Wafflehouse",
+            "Kezzy",
+            "Neptune",
+            "Femtune",
+            "DoctorPepper",
+            "SecretAszianMan",
+            "WireSpeed",
+            "WirelessEthernet",
+            "Spoonman",
+            "imnotaacer",
+            "Acer",
+            "Navi",
+            "DevilFlippy",
+            "Volcano",
+            "bushtail",
+            "Kaos_Atomic",
+            "Amity",
+            "1nfernalox",
+            "Qwertyalex",
+            "crypluto",
+            "cryplutoski"
+
+
         ];
         const factions = ["usec", "bear"];
         for (const faction of factions) {
