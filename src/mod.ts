@@ -125,6 +125,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
             "1nfernalox",
             "Qwertyalex",
             "crypluto",
+            "MJ",
             "cryplutoski"
 
 
