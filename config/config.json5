@@ -1,16 +1,7 @@
 {
-    // Enable or disable debug logging for mod messages
-    debugLogging: true,
+    ///This Will Overwrite SPT Files. Do Not Activate
+    "weatherPatchEnabled": false,
 
-    // Enable or disable background image override on launcher
-    bgImageOverrideEnabled: true,
-
-    // Enable or disable flea market min user level patch
-    fleaMarketPatchEnabled: true,
-
-    // Enable or disable single fire rate patch for Benelli Super M3 shotgun
-    singleFireRatePatchEnabled: true,
-
-    // New single fire rate value to set if patching is enabled
-    singleFireRateNewValue: 2000
+    
+    "debugLogging": false
 }

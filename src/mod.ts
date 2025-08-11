@@ -20,7 +20,7 @@ interface ModConfig {
 }
 
 class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
-    private configPath = path.resolve(__dirname, "..", "config", "config.json");
+    private configPath = path.resolve(__dirname, "..", "config", "config.json5");
     private config: ModConfig = {
         weatherPatchEnabled: true,
         debugLogging: false
@@ -45,11 +45,11 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         };
 
         const options = [
-            { filename: "bg.png", weight: 19 },
+            { filename: "bg.png", weight: 10 },
             { filename: "bg_1.png", weight: 10 },
             { filename: "bg_2.png", weight: 10 },
             { filename: "bg_3.png", weight: 10 },
-            { filename: "bg_4.png", weight: 1 },
+            { filename: "bg_4.png", weight: 10 },
             { filename: "bg_5.png", weight: 10 },
             { filename: "bg_6.png", weight: 10 },
             { filename: "bg_7.png", weight: 10 },
@@ -86,7 +86,26 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         this.patchBackgroundColorsInDB(tables);
 
         const botTypes = tables.bots.types;
-        const customNames = ["Pluto!", "Pigeon", "Pijinski", "eukyre"];
+        const customNames = [
+            "Pluto!",
+            "Pigeon",
+            "Pijinski",
+            "eukyre",
+            "FemboyBuddy",
+            "probablyeukyre",
+            "Eco",
+            "Exxtrasneaky",
+            "ffloid",
+            "Hj",
+            "Jeri_",
+            "Turok",
+            "Okbozo",
+            "Okboomer",
+            "Ronin117",
+            "Screwball0",
+            "tallanx",
+            "LaptopSPT"
+        ];
         const factions = ["usec", "bear"];
         for (const faction of factions) {
             const botType = botTypes[faction];
@@ -204,7 +223,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
 
             if (key === "BackgroundColor" && typeof value === "string") {
                 obj[key] = "black";
-                if (this.config.debugLogging) {}
+                if (this.config.debugLogging) { }
             } else if (typeof value === "object") {
                 this.patchBackgroundColorsInDB(value, depth + 1);
             }
