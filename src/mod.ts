@@ -126,9 +126,8 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
             "Qwertyalex",
             "crypluto",
             "MJ",
+            "Quikstar",
             "cryplutoski"
-
-
         ];
         const factions = ["usec", "bear"];
         for (const faction of factions) {
