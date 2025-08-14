@@ -1,6 +1,6 @@
 {
     "name": "Echoes of Tarkov - Util",
-    "author": "RheddElBozo",
+    "author": "Pluto!",
     "version": "1.0.0",
     "license": "MIT",
     "main": "src/mod.js",
@@ -13,9 +13,7 @@
         "Echoes-of-Tarkov---Father-Gabriel",
         "Virtual's Custom Quest Loader"
     ],
-    "loadAfter": [
-        "EpicRangeTime-Weapons"
-    ],
+    "loadAfter": [],
     "isBundleMod": false,
     "incompatibilities": [],
     "contributors": [

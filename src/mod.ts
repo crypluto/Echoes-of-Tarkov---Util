@@ -17,17 +17,527 @@ interface WeatherPreset {
 interface ModConfig {
     weatherPatchEnabled: boolean;
     debugLogging: boolean;
+    nameMode: "custom" | "realistic";
 }
 
 class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
-    private configPath = path.resolve(__dirname, "..", "config", "config.json5");
+    private configPath = path.resolve(__dirname, "..", "config", "config.json");
     private config: ModConfig = {
         weatherPatchEnabled: true,
-        debugLogging: false
+        debugLogging: false,
+        nameMode: "custom"
+    };
+
+    private customNames: string[] = [
+        "Pluto!", "Pigeon", "Pijinski", "eukyre", "FemboyBuddy", "Eco",
+        "Exxtrasneaky", "ffloid", "Hj", "Jeri_", "Turok", "Okbozo", "Ronin117",
+        "Screwball0", "LaptopSPT", "Nonbinary Wafflehouse", "Kezzy", "Neptune",
+        "Femtune", "DoctorPepper", "WireSpeed", "Spoonman", "Acer", "Navi",
+        "DevilFlippy", "Volcano"
+    ];
+
+    private realisticNames = {
+        usec: [
+            "James Smith",
+            "John Johnson",
+            "Robert Williams",
+            "Michael Brown",
+            "William Jones",
+            "David Miller",
+            "Richard Davis",
+            "Charles Garcia",
+            "Joseph Rodriguez",
+            "Thomas Martinez",
+            "Christopher Wilson",
+            "Daniel Anderson",
+            "Matthew Taylor",
+            "Anthony Thomas",
+            "Mark Hernandez",
+            "Donald Moore",
+            "Steven Jackson",
+            "Paul Martin",
+            "Andrew Lee",
+            "Joshua Perez",
+            "Kenneth Thompson",
+            "Kevin White",
+            "Brian Harris",
+            "George Sanchez",
+            "Edward Clark",
+            "Ronald Ramirez",
+            "Timothy Lewis",
+            "Jason Robinson",
+            "Jeffrey Walker",
+            "Ryan Hall",
+            "Jacob Allen",
+            "Gary Young",
+            "Nicholas King",
+            "Eric Wright",
+            "Jonathan Scott",
+            "Stephen Torres",
+            "Larry Nguyen",
+            "Justin Hill",
+            "Scott Flores",
+            "Brandon Green",
+            "Benjamin Adams",
+            "Samuel Baker",
+            "Gregory Nelson",
+            "Alexander Carter",
+            "Patrick Mitchell",
+            "Frank Perez",
+            "Raymond Roberts",
+            "Jack Turner",
+            "Dennis Phillips",
+            "Jerry Campbell",
+            "Tyler Parker",
+            "Aaron Evans",
+            "Jose Edwards",
+            "Adam Collins",
+            "Henry Stewart",
+            "Douglas Sanchez",
+            "Peter Morris",
+            "Nathan Rogers",
+            "Zachary Reed",
+            "Kyle Cook",
+            "Walter Morgan",
+            "Harold Bell",
+            "Ethan Murphy",
+            "Carl Bailey",
+            "Arthur Rivera",
+            "Ryan Cooper",
+            "Albert Richardson",
+            "Sean Cox",
+            "Christian Howard",
+            "Roger Ward",
+            "Lawrence Brooks",
+            "Jesse Kelly",
+            "Bryan Sanders",
+            "Billy Price",
+            "Jordan Bennett",
+            "Troy Patterson",
+            "Wayne Hughes",
+            "Derek Flores",
+            "Russell Simmons",
+            "Philip Foster",
+            "Joe Gonzales",
+            "Johnny Bryant",
+            "Randy Alexander",
+            "Louis Russell",
+            "Billy Griffin",
+            "Philip Diaz",
+            "Vincent Hayes",
+            "Bobby Myers",
+            "Johnny Ford",
+            "Howard Hamilton",
+            "Eugene Graham",
+            "Willie Sullivan",
+            "Ralph Wallace",
+            "Roy West",
+            "Brandon Cole",
+            "Carlos Reynolds",
+            "Billy Jenkins",
+            "Bruce Perry",
+            "Willie Powell",
+            "Gabriel Long",
+            "Albert Patterson",
+            "Dylan Hughes",
+            "Juan Flores",
+            "Carl Simmons",
+            "Arthur Foster",
+            "Ryan Gonzales",
+            "Sean Bryant",
+            "Victor Alexander",
+            "Keith Griffin",
+            "Lawrence Diaz",
+            "Scott Hayes",
+            "Brandon Myers",
+            "Benjamin Ford",
+            "Adam Hamilton",
+            "Trevor Graham",
+            "Patrick Sullivan",
+            "Evan Wallace",
+            "Shawn West",
+            "Curtis Cole",
+            "Derek Reynolds",
+            "Nathan Jenkins",
+            "Jared Perry",
+            "Lucas Powell",
+            "Christian Long",
+            "Austin Patterson",
+            "Jordan Hughes",
+            "Cameron Flores",
+            "Alex Simmons",
+            "Brandon Foster",
+            "Kyle Gonzales",
+            "Ethan Bryant",
+            "Logan Alexander",
+            "Nathan Russell",
+            "Caleb Griffin",
+            "Aaron Diaz",
+            "Jason Hayes",
+            "Matthew Myers",
+            "Ryan Ford",
+            "Tyler Hamilton",
+            "Justin Graham",
+            "Connor Sullivan",
+            "Brandon Wallace",
+            "Dylan West",
+            "Zachary Cole",
+            "Luke Reynolds",
+            "Alex Jenkins",
+            "Ian Perry",
+            "Evan Powell",
+            "Eli Long",
+            "Christian Patterson",
+            "Nicholas Hughes",
+            "Trevor Flores",
+            "Jason Simmons",
+            "Brandon Foster",
+            "Austin Gonzales",
+            "Kevin Bryant",
+            "Sean Alexander",
+            "Adam Russell",
+            "Brian Griffin",
+            "Tyler Diaz",
+            "Nathan Hayes",
+            "Eric Myers",
+            "Cameron Ford",
+            "Kyle Hamilton",
+            "Ryan Graham",
+            "Brandon Sullivan",
+            "Logan Wallace",
+            "Dylan West",
+            "Zachary Cole",
+            "Lucas Reynolds",
+            "Evan Jenkins",
+            "Christian Perry",
+            "Nathan Powell",
+            "Eli Long",
+            "Jason Patterson",
+            "Aaron Hughes",
+            "Jordan Flores",
+            "Kyle Simmons",
+            "Matthew Foster",
+            "Justin Gonzales",
+            "Adam Bryant",
+            "Sean Alexander",
+            "Ryan Russell",
+            "Brian Griffin",
+            "Connor Diaz",
+            "Trevor Hayes",
+            "Caleb Myers",
+            "Ethan Ford",
+            "Nicholas Hamilton",
+            "Christian Graham",
+            "Logan Sullivan",
+            "Dylan Wallace",
+            "Brandon West",
+            "Evan Cole",
+            "Austin Reynolds",
+            "Luke Jenkins",
+            "Zachary Perry",
+            "Ryan Powell",
+            "Eli Long",
+            "Jason Patterson",
+            "Aaron Hughes",
+            "Jordan Flores",
+            "Kyle Simmons",
+            "Matthew Foster",
+            "Justin Gonzales",
+            "Adam Bryant",
+            "Sean Alexander",
+            "Ryan Russell",
+            "Brian Griffin",
+            "Connor Diaz",
+            "Trevor Hayes",
+            "Caleb Myers",
+            "Ethan Ford",
+            "Nicholas Hamilton",
+            "Christian Graham",
+            "Logan Sullivan",
+            "Dylan Wallace",
+            "Brandon West",
+            "Evan Cole",
+            "Cody Richardson",
+            "Blake Montgomery",
+            "Travis Burke",
+            "Corey Johnston",
+            "Dustin Lambert",
+            "Shane Douglas",
+            "Bradley Harmon",
+            "Mitchell Barrett",
+            "Spencer Kelley",
+            "Garrett Lowe",
+            "Adrian Neal",
+            "Colin Bishop",
+            "Damian Fisher",
+            "Trevor Gardner",
+            "Brendan Hart",
+            "Derrick Hunt",
+            "Julian Newman",
+            "Malcolm Pierce",
+            "Phillip Riley",
+            "Troy Spencer",
+            "Edwin Walsh",
+            "Chad Warren",
+            "Frederick West",
+            "Eliot Willis",
+            "Cameron Bryant",
+            "Dylan Fisher",
+            "Brady Simmons",
+            "Jared Ellis",
+            "Spencer Hudson",
+            "Caleb Parker",
+            "Marcus Vaughn",
+            "Trevor Wheeler",
+            "Connor Vaughn",
+            "Gavin Flynn",
+            "Sean Harrison",
+            "Julian Marsh",
+            "Derek Lyons",
+            "Nathaniel Shaw",
+            "Tanner Douglas",
+            "Logan McBride",
+            "Asher Chambers",
+            "Malcolm Palmer",
+            "Grayson Barrett",
+            "Evan Fox",
+            "Colton Nash",
+            "Austin Boone",
+            "Jared Ramsey",
+            "Hunter Foster",
+            "Blake Morrison",
+            "Cody Barker",
+            "Brady Steele",
+            "Landon Harper",
+            "Troy Spencer"
+        ],
+        bear: [
+            "Александр Иванов",
+            "Дмитрий Смирнов",
+            "Сергей Кузнецов",
+            "Андрей Попов",
+            "Алексей Васильев",
+            "Михаил Петров",
+            "Владимир Соколов",
+            "Игорь Михайлов",
+            "Николай Фёдоров",
+            "Павел Морозов",
+            "Константин Волков",
+            "Юрий Алексеев",
+            "Артём Лебедев",
+            "Денис Соловьёв",
+            "Фёдор Козлов",
+            "Владислав Степанов",
+            "Евгений Николаев",
+            "Максим Орлов",
+            "Олег Семёнов",
+            "Виталий Павлов",
+            "Роман Васильев",
+            "Алексей Богданов",
+            "Илья Васильев",
+            "Сергей Крылов",
+            "Николай Ларионов",
+            "Андрей Дмитриев",
+            "Артём Белов",
+            "Дмитрий Фролов",
+            "Михаил Павлов",
+            "Александр Григорьев",
+            "Евгений Захаров",
+            "Владислав Петров",
+            "Павел Макаров",
+            "Иван Никитин",
+            "Алексей Андреев",
+            "Константин Морозов",
+            "Николай Тихонов",
+            "Денис Сорокин",
+            "Фёдор Васильев",
+            "Владимир Волков",
+            "Игорь Киселёв",
+            "Артём Гусев",
+            "Алексей Соловьёв",
+            "Михаил Кузьмин",
+            "Александр Новиков",
+            "Евгений Романов",
+            "Роман Фёдоров",
+            "Павел Денисов",
+            "Илья Николаев",
+            "Сергей Захаров",
+            "Константин Белов",
+            "Дмитрий Беляев",
+            "Алексей Орлов",
+            "Николай Семёнов",
+            "Фёдор Лебедев",
+            "Владимир Кузнецов",
+            "Артём Морозов",
+            "Михаил Никитин",
+            "Евгений Попов",
+            "Алексей Васильев",
+            "Денис Петров",
+            "Сергей Андреев",
+            "Владимир Фролов",
+            "Константин Григорьев",
+            "Николай Романов",
+            "Михаил Соловьёв",
+            "Александр Беликов",
+            "Игорь Новиков",
+            "Артём Лебедев",
+            "Павел Васильев",
+            "Алексей Морозов",
+            "Дмитрий Николаев",
+            "Роман Кузнецов",
+            "Сергей Петров",
+            "Владимир Никитин",
+            "Александр Михайлов",
+            "Дмитрий Захаров",
+            "Сергей Орлов",
+            "Андрей Романов",
+            "Алексей Степанов",
+            "Михаил Григорьев",
+            "Владимир Лебедев",
+            "Игорь Павлов",
+            "Николай Волков",
+            "Павел Богданов",
+            "Константин Ларионов",
+            "Юрий Кузьмин",
+            "Артём Никитин",
+            "Денис Андреев",
+            "Фёдор Новиков",
+            "Владислав Попов",
+            "Евгений Морозов",
+            "Максим Петров",
+            "Олег Фёдоров",
+            "Виталий Киселёв",
+            "Роман Лебедев",
+            "Алексей Павлов",
+            "Илья Григорьев",
+            "Сергей Николаев",
+            "Николай Васильев",
+            "Андрей Волков",
+            "Артём Захаров",
+            "Дмитрий Орлов",
+            "Михаил Романов",
+            "Александр Степанов",
+            "Евгений Лебедев",
+            "Владислав Павлов",
+            "Павел Григорьев",
+            "Иван Новиков",
+            "Алексей Морозов",
+            "Константин Никитин",
+            "Николай Андреев",
+            "Денис Новиков",
+            "Фёдор Попов",
+            "Владимир Морозов",
+            "Игорь Петров",
+            "Артём Фёдоров",
+            "Алексей Лебедев",
+            "Михаил Павлов",
+            "Александр Григорьев",
+            "Евгений Волков",
+            "Роман Николаев",
+            "Павел Васильев",
+            "Илья Захаров",
+            "Сергей Орлов",
+            "Константин Романов",
+            "Дмитрий Степанов",
+            "Алексей Ларионов",
+            "Николай Кузьмин",
+            "Фёдор Никитин",
+            "Владимир Андреев",
+            "Игорь Новиков",
+            "Артём Попов",
+            "Денис Морозов",
+            "Михаил Петров",
+            "Александр Фёдоров",
+            "Евгений Лебедев",
+            "Владислав Павлов",
+            "Павел Григорьев",
+            "Иван Новиков",
+            "Алексей Морозов",
+            "Константин Никитин",
+            "Николай Андреев",
+            "Денис Новиков",
+            "Фёдор Попов",
+            "Владимир Морозов",
+            "Игорь Петров",
+            "Артём Фёдоров",
+            "Алексей Лебедев",
+            "Михаил Павлов",
+            "Александр Григорьев",
+            "Евгений Волков",
+            "Роман Николаев",
+            "Павел Васильев",
+            "Илья Захаров",
+            "Сергей Орлов",
+            "Константин Романов",
+            "Дмитрий Степанов",
+            "Алексей Ларионов",
+            "Николай Кузьмин",
+            "Фёдор Никитин",
+            "Владимир Андреев",
+            "Игорь Новиков",
+            "Артём Попов",
+            "Денис Морозов",
+            "Михаил Петров",
+            "Александр Фёдоров",
+            "Евгений Лебедев",
+            "Владислав Павлов",
+            "Павел Григорьев",
+            "Иван Новиков",
+            "Алексей Морозов",
+            "Константин Никитин",
+            "Николай Андреев",
+            "Денис Новиков",
+            "Фёдор Попов",
+            "Владимир Морозов",
+            "Игорь Петров",
+            "Артём Фёдоров",
+            "Алексей Лебедев",
+            "Михаил Павлов",
+            "Александр Григорьев",
+            "Евгений Волков",
+            "Роман Николаев",
+            "Павел Васильев",
+            "Илья Захаров",
+            "Сергей Орлов",
+            "Константин Романов",
+            "Дмитрий Степанов",
+            "Алексей Ларионов",
+            "Николай Кузьмин",
+            "Фёдор Никитин",
+            "Владимир Андреев",
+            "Игорь Новиков",
+            "Артём Попов",
+            "Денис Морозов",
+            "Михаил Петров",
+            "Александр Фёдоров",
+            "Евгений Лебедев",
+            "Владислав Павлов",
+            "Павел Григорьев",
+            "Иван Новиков",
+            "Алексей Морозов",
+            "Константин Никитин",
+            "Николай Андреев",
+            "Денис Новиков",
+            "Фёдор Попов",
+            "Владимир Морозов",
+            "Игорь Петров",
+            "Артём Фёдоров",
+            "Алексей Лебедев",
+            "Михаил Павлов",
+            "Александр Григорьев",
+            "Евгений Волков",
+            "Роман Николаев",
+            "Павел Васильев",
+            "Илья Захаров",
+            "Сергей Орлов",
+            "Константин Романов"
+        ]
     };
 
     private printRainbowLog(): void {
-        console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Loaded              | \x1b[91mA\x1b[0m\x1b[93m \x1b[0m\x1b[92mM\x1b[0m\x1b[96mo\x1b[0m\x1b[94md\x1b[0m\x1b[95m \x1b[0m\x1b[91mb\x1b[0m\x1b[93my\x1b[0m\x1b[92m \x1b[0m\x1b[96mR\x1b[0m\x1b[94mh\x1b[0m\x1b[95me\x1b[0m\x1b[91md\x1b[0m\x1b[93md\x1b[0m\x1b[92mE\x1b[0m\x1b[96ml\x1b[0m\x1b[94mB\x1b[0m\x1b[95mo\x1b[0m\x1b[91mz\x1b[0m\x1b[93mo\x1b[0m\x1b[92m,\x1b[0m \x1b[96mE\x1b[0m\x1b[94mu\x1b[0m\x1b[95mk\x1b[0m\x1b[91my\x1b[0m\x1b[93mr\x1b[0m\x1b[92me\x1b[0m\x1b[96m,\x1b[0m \x1b[94ma\x1b[0m\x1b[95mn\x1b[0m\x1b[91md\x1b[0m \x1b[93mP\x1b[0m\x1b[92mi\x1b[0m\x1b[96mg\x1b[0m\x1b[94me\x1b[0m\x1b[95mo\x1b[0m\x1b[91mn\x1b[0m`);
+        console.log(
+            `\x1b[94m[Echoes of Tarkov] \x1b[93m Loaded              | \x1b[91mM\x1b[93ma\x1b[92md\x1b[96me \x1b[94mB\x1b[95my \x1b[91mP\x1b[93ml\x1b[92mu\x1b[96mt\x1b[94mo\x1b[95m!\x1b[0m`
+        );
     }
 
     public postDBLoad(container: DependencyContainer): void {
@@ -39,22 +549,21 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         this.loadConfig(logger);
 
         const debugLog = (msg: string) => {
-            if (this.config.debugLogging) {
-                logger.debug(`[Echoes of Tarkov] ${msg}`);
-            }
+            if (this.config.debugLogging) logger.debug(`[Echoes of Tarkov] ${msg}`);
         };
 
+        // ----- Launcher background selection -----
         const options = [
-            { filename: "bg.png", weight: 10 },
-            { filename: "bg_1.png", weight: 10 },
-            { filename: "bg_2.png", weight: 10 },
-            { filename: "bg_3.png", weight: 10 },
-            { filename: "bg_4.png", weight: 10 },
-            { filename: "bg_5.png", weight: 10 },
-            { filename: "bg_6.png", weight: 10 },
-            { filename: "bg_7.png", weight: 10 },
-            { filename: "bg_8.png", weight: 10 },
-            { filename: "bg_9.png", weight: 10 }
+            { filename: "bg.png", weight: 3.75 },
+            { filename: "bg_1.png", weight: 50 },
+            { filename: "bg_2.png", weight: 20 },
+            { filename: "bg_3.png", weight: 3.75 },
+            { filename: "bg_4.png", weight: 3.75 },
+            { filename: "bg_5.png", weight: 3.75 },
+            { filename: "bg_6.png", weight: 3.75 },
+            { filename: "bg_7.png", weight: 3.75 },
+            { filename: "bg_8.png", weight: 3.75 },
+            { filename: "bg_9.png", weight: 3.75 }
         ];
 
         const totalWeight = options.reduce((sum, option) => sum + option.weight, 0);
@@ -71,7 +580,6 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         }
 
         const selectedPath = path.resolve(__dirname, "..", "res", selectedFile);
-
         if (fs.existsSync(selectedPath)) {
             console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Overriding launcher background with ${selectedFile}`);
             imageRouter.addRoute("/files/launcher/bg", selectedPath);
@@ -82,76 +590,34 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         const db = container.resolve<DatabaseServer>("DatabaseServer");
         const tables = db.getTables();
 
-        // NEW: patch BackgroundColor in DB memory
+        // Patch BackgroundColor in memory
         this.patchBackgroundColorsInDB(tables);
 
-        const botTypes = tables.bots.types;
-        const customNames = [
-            "Pluto!",
-            "Pigeon",
-            "Pijinski",
-            "eukyre",
-            "FemboyBuddy",
-            "probablyeukyre",
-            "Eco",
-            "Exxtrasneaky",
-            "ffloid",
-            "Hj",
-            "Jeri_",
-            "Turok",
-            "Okbozo",
-            "Okboomer",
-            "Ronin117",
-            "Screwball0",
-            "tallanx",
-            "LaptopSPT",
-            "Nonbinary Wafflehouse",
-            "Kezzy",
-            "Neptune",
-            "Femtune",
-            "DoctorPepper",
-            "SecretAszianMan",
-            "WireSpeed",
-            "WirelessEthernet",
-            "Spoonman",
-            "imnotaacer",
-            "Acer",
-            "Navi",
-            "DevilFlippy",
-            "Volcano",
-            "bushtail",
-            "Kaos_Atomic",
-            "Amity",
-            "1nfernalox",
-            "Qwertyalex",
-            "crypluto",
-            "MJ",
-            "Quikstar",
-            "cryplutoski"
-        ];
+        // ----- Bot name patching -----
         const factions = ["usec", "bear"];
         for (const faction of factions) {
-            const botType = botTypes[faction];
-            if (botType?.firstName) {
-                for (const name of customNames) {
-                    if (!botType.firstName.includes(name)) {
-                        botType.firstName.push(name);
-                    }
+            const botType = tables.bots.types[faction];
+            if (!botType?.firstName) continue;
+
+            if (this.config.nameMode === "custom") {
+                for (const name of this.customNames) {
+                    if (!botType.firstName.includes(name)) botType.firstName.push(name);
                 }
-                debugLog(`Added custom ${faction.toUpperCase()} names: ${customNames.join(", ")}`);
-            } else {
-                logger.warning(`Could not find ${faction} firstName array.`);
+                debugLog(`Added custom ${faction.toUpperCase()} names.`);
+            } else if (this.config.nameMode === "realistic") {
+                botType.firstName = this.realisticNames[faction] ?? [];
+                debugLog(`Overwritten ${faction.toUpperCase()} names with realistic names.`);
             }
         }
 
+        // ----- Ragfair patch -----
         if (tables.globals?.config?.RagFair) {
             const oldLevel = tables.globals.config.RagFair.minUserLevel;
             tables.globals.config.RagFair.minUserLevel = 30;
             debugLog(`Raised Ragfair min level from ${oldLevel} to 30`);
-        } else {
-            logger.warning("Could not locate config.RagFair.minUserLevel in globals.");
         }
 
+        // ----- Weather patch -----
         if (!this.config.weatherPatchEnabled) {
             debugLog("Weather patch disabled via config.");
             return;
@@ -224,10 +690,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
             presetRand -= p.weight;
         }
 
-        if (!selectedPreset) {
-            selectedPreset = presets[0];
-        }
-
+        if (!selectedPreset) selectedPreset = presets[0];
         console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Applying weather preset: ${selectedPreset.name}`);
 
         for (const season in weatherData.weather.seasonValues) {
@@ -240,13 +703,10 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
 
     private patchBackgroundColorsInDB(obj: any, depth = 0): void {
         if (depth > 20 || typeof obj !== "object" || obj === null) return;
-
         for (const key of Object.keys(obj)) {
             const value = obj[key];
-
             if (key === "BackgroundColor" && typeof value === "string") {
                 obj[key] = "black";
-                if (this.config.debugLogging) { }
             } else if (typeof value === "object") {
                 this.patchBackgroundColorsInDB(value, depth + 1);
             }
@@ -257,9 +717,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         let dir = startDir;
         for (let i = 0; i < 10; i++) {
             const testPath = path.join(dir, "SPT_Data", "Server", "configs", "weather.json");
-            if (fs.existsSync(testPath)) {
-                return testPath;
-            }
+            if (fs.existsSync(testPath)) return testPath;
             const parent = path.dirname(dir);
             if (parent === dir) break;
             dir = parent;
@@ -272,16 +730,24 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
             try {
                 const raw = fs.readFileSync(this.configPath, "utf-8");
                 const parsed = JSON.parse(raw);
+
                 this.config.weatherPatchEnabled = parsed.weatherPatchEnabled ?? true;
                 this.config.debugLogging = parsed.debugLogging ?? false;
+                this.config.nameMode = parsed.nameMode === "realistic" ? "realistic" : "custom";
+
+                // --- Logging the loaded config ---
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | ${this.config.nameMode === "custom" ? "Custom Names Selected" : "Realistic Names Selected"}`);
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Weather system ${this.config.weatherPatchEnabled ? "active" : "disabled"}`);
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Debug logging ${this.config.debugLogging ? "on" : "off"}`);
+
                 if (this.config.debugLogging) {
-                    logger.debug("[Echoes of Tarkov] Config loaded: weatherPatchEnabled=" + this.config.weatherPatchEnabled + ", debugLogging=" + this.config.debugLogging);
+                    logger.debug(`[Echoes of Tarkov] Config loaded: ${JSON.stringify(this.config)}`);
                 }
             } catch (e) {
                 logger.error("[Echoes of Tarkov] Failed to parse config.json, using defaults.");
             }
         } else {
-            logger.warning("[Echoes of Tarkov] Config file not found at " + this.configPath + ", using defaults.");
+            logger.warning("[Echoes of Tarkov] Config file not found, using defaults.");
         }
     }
 }

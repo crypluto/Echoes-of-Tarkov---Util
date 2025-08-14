@@ -1,7 +1,0 @@
-{
-    ///This Will Overwrite SPT Files. Do Not Activate
-    "weatherPatchEnabled": false,
-
-    
-    "debugLogging": false
-}
