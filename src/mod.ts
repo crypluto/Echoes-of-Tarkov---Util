@@ -33,7 +33,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         "Exxtrasneaky", "ffloid", "Hj", "Jeri_", "Turok", "Okbozo", "Ronin117",
         "Screwball0", "LaptopSPT", "Nonbinary Wafflehouse", "Kezzy", "Neptune",
         "Femtune", "DoctorPepper", "WireSpeed", "Spoonman", "Acer", "Navi",
-        "DevilFlippy", "Volcano"
+        "DevilFlippy", "Volcano", "Lebear James"
     ];
 
     private realisticNames = {
