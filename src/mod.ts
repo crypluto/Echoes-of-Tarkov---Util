@@ -581,7 +581,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
 
         const selectedPath = path.resolve(__dirname, "..", "res", selectedFile);
         if (fs.existsSync(selectedPath)) {
-            console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Overriding launcher background with ${selectedFile}`);
+            console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Overriding launcher background with \x1b[32m${selectedFile}`);
             imageRouter.addRoute("/files/launcher/bg", selectedPath);
         } else {
             logger.warning(`Selected background not found: ${selectedPath}`);
@@ -691,7 +691,7 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
         }
 
         if (!selectedPreset) selectedPreset = presets[0];
-        console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Applying weather preset: ${selectedPreset.name}`);
+        console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Utility             | Applying weather preset:\x1b[32m ${selectedPreset.name}`);
 
         for (const season in weatherData.weather.seasonValues) {
             selectedPreset.apply(weatherData.weather.seasonValues[season]);
@@ -736,18 +736,18 @@ class BGReplace implements IpreSptLoadMod, IPostDBLoadMod {
                 this.config.nameMode = parsed.nameMode === "realistic" ? "realistic" : "custom";
 
                 // --- Logging the loaded config ---
-                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | ${this.config.nameMode === "custom" ? "Custom Names Selected" : "Realistic Names Selected"}`);
-                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Weather system ${this.config.weatherPatchEnabled ? "active" : "disabled"}`);
-                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Debug logging ${this.config.debugLogging ? "on" : "off"}`);
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | \x1b[32m${this.config.nameMode === "custom" ? "Custom Names Selected" : "Realistic Names Selected"}`);
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Weather system\x1b[32m ${this.config.weatherPatchEnabled ? "active" : "disabled"}`);
+                console.log(`\x1b[94m[Echoes of Tarkov] \x1b[93m Config              | Debug logging\x1b[32m ${this.config.debugLogging ? "on" : "off"}`);
 
                 if (this.config.debugLogging) {
                     logger.debug(`[Echoes of Tarkov] Config loaded: ${JSON.stringify(this.config)}`);
                 }
             } catch (e) {
-                logger.error("[Echoes of Tarkov] Failed to parse config.json, using defaults.");
+                logger.error("[Echoes of Tarkov] \x1b[31mFailed to parse config.json, using defaults.");
             }
         } else {
-            logger.warning("[Echoes of Tarkov] Config file not found, using defaults.");
+            logger.warning("[Echoes of Tarkov] \x1b[33mConfig file not found, using defaults.");
         }
     }
 }
